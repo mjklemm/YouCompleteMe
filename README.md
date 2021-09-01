@@ -1,6 +1,10 @@
 YouCompleteMe: a code-completion engine for Vim
 ===============================================
 
+**Note**: This is a fork of [ycm-core/YouCompleteMe](https://github.com/ycm-core/YouCompleteMe) with Tabnine integrated. It syncs from the upstream on daily basis.
+
+To install jump to [installation section](#installation).
+
 [![Gitter room](https://img.shields.io/gitter/room/Valloric/YouCompleteMe.svg)](https://gitter.im/Valloric/YouCompleteMe)
 [![Build status](https://dev.azure.com/YouCompleteMe/YCM/_apis/build/status/ycm-core.YouCompleteMe?branchName=master)](https://dev.azure.com/YouCompleteMe/YCM/_build?definitionId=3&branchName=master)
 [![Coverage status](https://img.shields.io/codecov/c/github/ycm-core/YouCompleteMe/master.svg)](https://codecov.io/gh/ycm-core/YouCompleteMe)
