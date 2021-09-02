@@ -817,6 +817,10 @@ class YouCompleteMe:
     vimsupport.PostVimMessage( 'Diagnostics refreshed', warning = False )
     return True
 
+  def OpenTabnineHub( self ):
+    BaseRequest().PostDataToHandler(
+        BuildRequestData(), 'open_tabnine_hub' )
+    return True
 
   def ShowDiagnostics( self ):
     if not self.ForceCompileAndDiagnostics():

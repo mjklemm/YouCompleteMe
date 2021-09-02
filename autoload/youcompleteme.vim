@@ -1170,6 +1170,7 @@ function! s:SetUpCommands()
   command! YcmDiags call s:ShowDiagnostics()
   command! YcmShowDetailedDiagnostic call s:ShowDetailedDiagnostic()
   command! YcmForceCompileAndDiagnostics call s:ForceCompileAndDiagnostics()
+  command! YcmTabnineHub call s:OpenTabnineHub()
 endfunction
 
 
@@ -1345,6 +1346,11 @@ endfunction
 
 function! s:ForceCompileAndDiagnostics()
   py3 ycm_state.ForceCompileAndDiagnostics()
+endfunction
+
+
+function! s:OpenTabnineHub()
+  py3 ycm_state.OpenTabnineHub()
 endfunction
 
 
