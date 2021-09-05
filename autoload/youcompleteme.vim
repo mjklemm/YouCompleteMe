@@ -599,6 +599,22 @@ function! s:OnCompleteChanged()
 endfunction
 
 
+function! s:ExpandNewLines()
+  if empty(v:completed_item)
+    return
+  endif
+  if match(v:completed_item.word, '⏎') == -1
+    return
+  endif
+
+  let parts = split(getline('.'), '⏎',1)
+  delete _
+  call append(line('.')-1, parts)
+  -1
+  call s:SendKeys("\<Esc>A")
+endfunction
+
+
 function! s:ResolveCompletionItem( item )
   if s:resolve_completions != s:RESOLVE_ON_DEMAND
     return
@@ -866,6 +882,9 @@ function! s:OnTextChangedInsertMode( popup_is_visible )
   if g:ycm_autoclose_preview_window_after_completion
     call s:ClosePreviewWindowIfNeeded()
   endif
+
+  call s:ExpandNewLines()
+
 endfunction
 
 
