@@ -2758,6 +2758,8 @@ set, YCM will fall back to the value of the
 `g:syntastic_always_populate_loc_list` option before using this option's
 default.
 
+Note: if YCM's errors aren't visible, it might be that YCM is updating an older location list. See `:help :lhistory` and `:lolder`.
+
 Default: `0`
 
 ```viml
