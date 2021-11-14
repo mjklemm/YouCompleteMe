@@ -222,6 +222,7 @@ function! youcompleteme#EnableCursorMovedAutocommands()
   augroup ycmcompletemecursormove
     autocmd!
     autocmd CursorMoved * call s:OnCursorMovedNormalMode()
+    autocmd CursorMovedI * let s:current_cursor_position = getpos( '.' )
     autocmd TextChanged * call s:OnTextChangedNormalMode()
     autocmd TextChangedI * call s:OnTextChangedInsertMode( v:false )
     autocmd TextChangedP * call s:OnTextChangedInsertMode( v:true )
@@ -860,6 +861,7 @@ function! s:OnTextChangedInsertMode( popup_is_visible )
     return
   endif
 
+  let s:current_cursor_position = getpos( '.' )
   if s:completion_stopped
     let s:completion_stopped = 0
     let s:completion = s:default_completion
@@ -1057,7 +1059,9 @@ function! s:PollCompletion( ... )
   endif
 
   let s:completion = py3eval( 'ycm_state.GetCompletionResponse()' )
-  call s:Complete()
+  if s:current_cursor_position == getpos( '.' )
+    call s:Complete()
+  endif
 endfunction
 
 
