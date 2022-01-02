@@ -248,7 +248,7 @@ though we do our best to signal where we know them.
 
 - Install YCM plugin via [Vundle][]
 - Install CMake, MacVim and Python 3; Note that the pre-installed *macOS system*
-  vim is not supported (due to it having broken Python intetgration).
+  vim is not supported (due to it having broken Python integration).
 
 ```
 $ brew install cmake python go nodejs
