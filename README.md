@@ -1,4 +1,8 @@
+### Deprecated
+This plugin is not longer maintained. To get Tabnine latest features, including advanced (snippets) completions - use our new neovim extension [tabnine-nvim](https://github.com/codota/tabnine-nvim)
+
 YouCompleteMe: a code-completion engine for Vim
+
 ===============================================
 
 **Note**: This is a fork of [ycm-core/YouCompleteMe](https://github.com/ycm-core/YouCompleteMe) with Tabnine integrated. It syncs from the upstream on daily basis.
