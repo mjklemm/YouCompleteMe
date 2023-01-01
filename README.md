@@ -1,5 +1,5 @@
 ### Deprecated
-This plugin is not longer maintained. To get Tabnine latest features, including advanced (snippets) completions - use our new neovim extension [tabnine-nvim](https://github.com/codota/tabnine-nvim)
+This plugin is no longer maintained. To get Tabnine latest features, including advanced (snippets) completions - use our new neovim extension [tabnine-nvim](https://github.com/codota/tabnine-nvim)
 
 YouCompleteMe: a code-completion engine for Vim
 ===============================================
