@@ -83,9 +83,10 @@ CORE_MISSING_MESSAGE = (
 CORE_OUTDATED_MESSAGE = (
   'YCM core library too old; PLEASE RECOMPILE by running the install.py '
   'script. See the documentation for more details.' )
-NO_PYTHON2_SUPPORT_MESSAGE = (
-  'YCM has dropped support for python2. '
-  'You need to recompile it with python3 instead.' )
+PYTHON_TOO_OLD_MESSAGE = (
+  'Your python is too old to run YCM server. '
+  'Please see troubleshooting guide on YCM GitHub wiki.'
+)
 SERVER_IDLE_SUICIDE_SECONDS = 1800  # 30 minutes
 CLIENT_LOGFILE_FORMAT = 'ycm_'
 SERVER_LOGFILE_FORMAT = 'ycmd_{port}_{std}_'
@@ -119,7 +120,8 @@ class YouCompleteMe:
     self._latest_completion_request = None
     self._latest_signature_help_request = None
     self._signature_help_available_requests = SigHelpAvailableByFileType()
-    self._latest_command_reqeust = None
+    self._command_requests = {}
+    self._next_command_request_id = 0
 
     self._signature_help_state = signature_help.SignatureHelpState()
     self._user_options = base.GetUserOptions( self._default_options )
@@ -249,7 +251,8 @@ class YouCompleteMe:
     elif return_code == 7:
       error_message = CORE_OUTDATED_MESSAGE
     elif return_code == 8:
-      error_message = NO_PYTHON2_SUPPORT_MESSAGE
+      # TODO: here we could retry but discard g:ycm_server_python_interpreter
+      error_message = PYTHON_TOO_OLD_MESSAGE
     else:
       error_message = EXIT_CODE_UNEXPECTED_MESSAGE.format( code = return_code,
                                                            logfile = logfile )
@@ -375,21 +378,24 @@ class YouCompleteMe:
                                    has_range,
                                    start_line,
                                    end_line ):
-    final_arguments = []
-    for argument in arguments:
-      # The ft= option which specifies the completer when running a command is
-      # ignored because it has not been working for a long time. The option is
-      # still parsed to not break users that rely on it.
-      if argument.startswith( 'ft=' ):
-        continue
-      final_arguments.append( argument )
-
     extra_data = {
       'options': {
         'tab_size': vimsupport.GetIntValue( 'shiftwidth()' ),
         'insert_spaces': vimsupport.GetBoolValue( '&expandtab' )
       }
     }
+
+    final_arguments = []
+    for argument in arguments:
+      if argument.startswith( 'ft=' ):
+        extra_data[ 'completer_target' ] = argument[ 3: ]
+        continue
+      elif argument.startswith( '--bufnr=' ):
+        extra_data[ 'bufnr' ] = int( argument[ len( '--bufnr=' ): ] )
+        continue
+
+      final_arguments.append( argument )
+
     if has_range:
       extra_data.update( vimsupport.BuildRange( start_line, end_line ) )
     self._AddExtraConfDataIfNeeded( extra_data )
@@ -431,12 +437,21 @@ class YouCompleteMe:
       False,
       0,
       0 )
-    self._latest_command_reqeust = SendCommandRequestAsync( final_arguments,
-                                                            extra_data )
+
+    request_id = self._next_command_request_id
+    self._next_command_request_id += 1
+    self._command_requests[ request_id ] = SendCommandRequestAsync(
+      final_arguments,
+      extra_data )
+    return request_id
 
 
-  def GetCommandRequest( self ):
-    return self._latest_command_reqeust
+  def GetCommandRequest( self, request_id ):
+    return self._command_requests.get( request_id )
+
+
+  def FlushCommandRequest( self, request_id ):
+    self._command_requests.pop( request_id, None )
 
 
   def GetDefinedSubcommands( self ):
@@ -586,12 +601,21 @@ class YouCompleteMe:
 
 
   def CurrentBuffer( self ):
-    return self._buffers[ vimsupport.GetCurrentBufferNumber() ]
+    return self.Buffer( vimsupport.GetCurrentBufferNumber() )
+
+
+  def Buffer( self, bufnr ):
+    return self._buffers[ bufnr ]
+
+
+  def OnInsertEnter( self ):
+    if not self._user_options[ 'update_diagnostics_in_insert_mode' ]:
+      self.CurrentBuffer().ClearDiagnosticsUI()
 
 
   def OnInsertLeave( self ):
     if ( not self._user_options[ 'update_diagnostics_in_insert_mode' ] and
-         not self.NeedsReparse() ):
+         not self.CurrentBuffer().ParseRequestPending() ):
       self.CurrentBuffer().RefreshDiagnosticsUI()
     SendEventNotificationAsync( 'InsertLeave' )
 
@@ -719,6 +743,12 @@ class YouCompleteMe:
       debug_info += ( 'Server logfiles:\n'
                       f'  { self._server_stdout }\n'
                       f'  { self._server_stderr }' )
+    debug_info += ( '\nSemantic highlighting supported: ' +
+                    str( not vimsupport.VimIsNeovim() ) )
+    debug_info += ( '\nVirtual text supported: ' +
+                    str( vimsupport.VimSupportsVirtualText() ) )
+    debug_info += ( '\nPopup windows supported: ' +
+                    str( vimsupport.VimSupportsPopupWindows() ) )
     return debug_info
 
 
@@ -836,7 +866,8 @@ class YouCompleteMe:
               'textprop': prop[ 'type' ],
             } )
             options.pop( 'col' )
-        vim.eval( f'{ popup_func }( { lines }, { options } )' )
+        vim.eval( f'{ popup_func }( { json.dumps( lines ) }, '
+                                  f'{ json.dumps( options ) } )' )
       else:
         vimsupport.PostVimMessage( message, warning = False )
 

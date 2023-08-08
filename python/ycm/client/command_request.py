@@ -37,10 +37,15 @@ class CommandRequest( BaseRequest ):
     self._request_data = None
     self._response_future = None
     self._silent = silent
+    self._bufnr = extra_data.pop( 'bufnr', None ) if extra_data else None
 
 
   def Start( self ):
-    self._request_data = BuildRequestData()
+    if self._bufnr is not None:
+      self._request_data = BuildRequestData( self._bufnr )
+    else:
+      self._request_data = BuildRequestData()
+
     if self._extra_data:
       self._request_data.update( self._extra_data )
     self._request_data.update( {
@@ -88,7 +93,7 @@ class CommandRequest( BaseRequest ):
       return self._HandleMessageResponse()
 
     if 'detailed_info' in self._response:
-      return self._HandleDetailedInfoResponse()
+      return self._HandleDetailedInfoResponse( modifiers )
 
     # The only other type of response we understand is GoTo, and that is the
     # only one that we can't detect just by inspecting the response (it should
@@ -133,6 +138,12 @@ class CommandRequest( BaseRequest ):
       vimsupport.SetQuickFixList(
         [ vimsupport.BuildQfListItem( x ) for x in self._response ] )
       vimsupport.OpenQuickFixList( focus = True, autoclose = True )
+    elif self._response.get( 'file_only' ):
+      vimsupport.JumpToLocation( self._response[ 'filepath' ],
+                                 None,
+                                 None,
+                                 modifiers,
+                                 buffer_command )
     else:
       vimsupport.JumpToLocation( self._response[ 'filepath' ],
                                  self._response[ 'line_num' ],
@@ -190,8 +201,9 @@ class CommandRequest( BaseRequest ):
     vimsupport.PostVimMessage( self._response[ 'message' ], warning = False )
 
 
-  def _HandleDetailedInfoResponse( self ):
-    vimsupport.WriteToPreviewWindow( self._response[ 'detailed_info' ] )
+  def _HandleDetailedInfoResponse( self, modifiers ):
+    vimsupport.WriteToPreviewWindow( self._response[ 'detailed_info' ],
+                                     modifiers )
 
 
 def SendCommandRequestAsync( arguments, extra_data = None, silent = True ):
